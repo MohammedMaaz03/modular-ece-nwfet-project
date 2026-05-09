@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced NWFET Gate Stack Equivalent Circuit Model</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #34495e;
+        }
+        select, input[type="range"] {
+            padding: 8px 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        select:focus, input[type="range"]:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 200px;
+        }
+        .slider-value {
+            font-weight: bold;
+            color: #e74c3c;
+            min-width: 50px;
+            text-align: center;
+        }
+        .circuit-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        svg {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .info-panel {
+            background: #ecf0f1;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .param-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .param-card {
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .param-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .param-card .label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .param-card .value {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 5px;
+            color: #495057;
+        }
+        .plots-section {
+            margin-top: 40px;
+        }
+        .plot-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .plot-title {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        .node:hover {
+            opacity: 0.8;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enhanced NWFET Gate Stack Equivalent Circuit Model</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="gate-sel">Gate Type</label>
+                <select id="gate-sel" onchange="updateAll()">
+                    <option value="pi">π-Gate (η=0.82)</option>
+                    <option value="omega">Ω-Gate (η=0.98)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="diel-sel">Dielectric Material</label>
+                <select id="diel-sel" onchange="updateAll()">
+                    <option value="SiO2">SiO₂ (k=3.9)</option>
+                    <option value="Al2O3">Al₂O₃ (k=9.0)</option>
+                    <option value="HfO2" selected>HfO₂ (k=25.0)</option>
+                    <option value="ZrO2">ZrO₂ (k=22.0)</option>
+                    <option value="La2O3">La₂O₃ (k=27.0)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="temp-sel">Temperature</label>
+                <select id="temp-sel" onchange="updateAll()">
+                    <option value="77">77 K</option>
+                    <option value="300" selected>300 K</option>
+                    <option value="373">373 K</option>
+                    <option value="600">600 K</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Frequency Range</label>
+                <div class="slider-container">
+                    <input type="range" id="freq-min" min="0" max="8" step="0.5" value="1" onchange="updateSliderValue('freq-min'); updatePlots();">
+                    <span class="slider-value" id="freq-min-value">10 Hz</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="freq-max" min="2" max="10" step="0.5" value="6" onchange="updateSliderValue('freq-max'); updatePlots();">
+                    <span class="slider-value" id="freq-max-value">1 MHz</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="circuit-section">
+            <svg width="100%" viewBox="0 0 680 310" role="img">
+                <title>NWFET gate stack equivalent circuit</title>
+                <desc>Series connection of Rs, parallel Rox-Cox, and parallel Cd-Git-Cit</desc>
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M2 1L8 5L2 9" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </marker>
+                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#2980b9;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#2ecc71;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#27ae60;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#e74c3c;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#c0392b;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <line x1="20" y1="120" x2="60" y2="120" stroke="#333" stroke-width="2"/>
+                <circle cx="20" cy="120" r="4" fill="#333" stroke="#333" stroke-width="1"/>
+                <text x="20" y="108" text-anchor="middle" font-size="12" fill="#333">V_in</text>
+                <g class="node" onclick="showInfo('rs')" style="cursor:pointer">
+                    <rect x="60" y="100" width="80" height="40" rx="4" fill="url(#grad1)" stroke="#185FA5" stroke-width="1"/>
+                    <text x="100" y="120" text-anchor="middle" dominant-baseline="central" fill="white" font-weight="bold">R_s</text>
+                </g>
+                <text x="100" y="156" text-anchor="middle" font-size="11" fill="#666">Series</text>
+                <text x="100" y="170" text-anchor="middle" font-size="11" fill="#666">resistance</text>
+                <line x1="140" y1="120" x2="180" y2="120" stroke="#333" stroke-width="2"/>
+                <text x="160" y="108" text-anchor="middle" fill="#e74c3c" font-weight="bold">A</text>
+                <g id="block2">
+                    <rect x="180" y="46" width="180" height="148" rx="10" fill="none" stroke="#2ecc71" stroke-width="2" stroke-dasharray="4 3"/>
+                    <text x="270" y="38" text-anchor="middle" font-size="12" fill="#27ae60" font-weight="bold">Oxide Layer</text>
+                    <line x1="180" y1="120" x2="200" y2="120" stroke="#333" stroke-width="2"/>
+                    <line x1="200" y1="120" x2="200" y2="76" stroke="#333" stroke-width="2"/>
+                    <line x1="200" y1="120" x2="200" y2="164" stroke="#333" stroke-width="2"/>
+                    <g class="node" onclick="showInfo('rox')" style="cursor:pointer">
+                        <rect x="210" y="56" width="100" height="40" rx="4" fill="url(#grad2)" stroke="#3B6D11" stroke-width="1"/>
+                        <text x="260" y="76" text-anchor="middle" dominant-baseline="central" fill="white" font-weight="bold">R_ox</text>
+                    </g>
+                    <g class="node" onclick="showInfo('cox')" style="cursor:pointer">
+                        <rect x="210" y="144" width="100" height="40" rx="4" fill="url(#grad2)" stroke="#3B6D11" stroke-width="1"/>
+                        <text x="260" y="164" text-anchor="middle" dominant-baseline="central" fill="white" font-weight="bold">C_ox</text>
+                    </g>
+                    <line x1="310" y1="76" x2="340" y2="76" stroke="#333" stroke-width="2"/>
+                    <line x1="310" y1="164" x2="340" y2="164" stroke="#333" stroke-width="2"/>
+                    <line x1="340" y1="76" x2="340" y2="164" stroke="#333" stroke-width="2"/>
+                    <line x1="340" y1="120" x2="360" y2="120" stroke="#333" stroke-width="2"/>
+                </g>
+                <text x="370" y="108" text-anchor="middle" fill="#e74c3c" font-weight="bold">B</text>
+                <line x1="360" y1="120" x2="390" y2="120" stroke="#333" stroke-width="2"/>
+                <g id="block3">
+                    <rect x="390" y="26" width="230" height="208" rx="10" fill="none" stroke="#e74c3c" stroke-width="2" stroke-dasharray="4 3"/>
+                    <text x="505" y="18" text-anchor="middle" font-size="12" fill="#c0392b" font-weight="bold">Depletion + Interface Traps</text>
+                    <line x1="390" y1="120" x2="410" y2="120" stroke="#333" stroke-width="2"/>
+                    <line x1="410" y1="120" x2="410" y2="56" stroke="#333" stroke-width="2"/>
+                    <line x1="410" y1="120" x2="410" y2="184" stroke="#333" stroke-width="2"/>
+                    <g class="node" onclick="showInfo('cd')" style="cursor:pointer">
+                        <rect x="420" y="36" width="90" height="40" rx="4" fill="url(#grad3)" stroke="#854F0B" stroke-width="1"/>
+                        <text x="465" y="56" text-anchor="middle" dominant-baseline="central" fill="white" font-weight="bold">C_d</text>
+                    </g>
+                    <g class="node" onclick="showInfo('git')" style="cursor:pointer">
+                        <rect x="420" y="100" width="90" height="40" rx="4" fill="#f39c12" stroke="#993556" stroke-width="1"/>
+                        <text x="465" y="120" text-anchor="middle" dominant-baseline="central" fill="#72243E" font-weight="bold">G_it</text>
+                    </g>
+                    <g class="node" onclick="showInfo('cit')" style="cursor:pointer">
+                        <rect x="420" y="164" width="90" height="40" rx="4" fill="#f39c12" stroke="#993556" stroke-width="1"/>
+                        <text x="465" y="184" text-anchor="middle" dominant-baseline="central" fill="#72243E" font-weight="bold">C_it</text>
+                    </g>
+                    <line x1="510" y1="56" x2="580" y2="56" stroke="#333" stroke-width="2"/>
+                    <line x1="510" y1="120" x2="580" y2="120" stroke="#333" stroke-width="2"/>
+                    <line x1="510" y1="184" x2="580" y2="184" stroke="#333" stroke-width="2"/>
+                    <line x1="580" y1="56" x2="580" y2="184" stroke="#333" stroke-width="2"/>
+                    <line x1="580" y1="120" x2="620" y2="120" stroke="#333" stroke-width="2"/>
+                </g>
+                <line x1="620" y1="120" x2="660" y2="120" stroke="#333" stroke-width="2"/>
+                <circle cx="660" cy="120" r="4" fill="#333" stroke="#333" stroke-width="1"/>
+                <text x="660" y="108" text-anchor="middle" font-size="12" fill="#333">V_out</text>
+                <text x="270" y="218" text-anchor="middle" font-size="12" fill="#666">
+                    Z_total = R_s + (R_ox ‖ C_ox) + (C_d ‖ G_it ‖ C_it)
+                </text>
+                <line x1="20" y1="260" x2="660" y2="260" stroke="#333" stroke-width="1" stroke-dasharray="2 4" opacity="0.5"/>
+                <text x="100" y="278" text-anchor="middle" font-size="11">
+                    <tspan fill="#3498db">■</tspan> Contacts + Channel
+                </text>
+                <text x="270" y="278" text-anchor="middle" font-size="11">
+                    <tspan fill="#2ecc71">■</tspan> Gate Oxide Bulk
+                </text>
+                <text x="505" y="278" text-anchor="middle" font-size="11">
+                    <tspan fill="#e74c3c">■</tspan> Interface Traps
+                </text>
+                <text x="465" y="292" text-anchor="middle" font-size="11">
+                    <tspan fill="#f39c12">■</tspan> Depletion
+                </text>
+            </svg>
+        </div>
+        
+        <div class="info-panel" id="info-panel">Click any component to see its physics and extracted value for the selected gate, dielectric, and temperature.</div>
+        
+        <div class="param-grid" id="param-grid"></div>
+        
+        <div class="plots-section">
+            <div class="plot-container">
+                <div class="plot-title">Bode Plot: Impedance Magnitude</div>
+                <canvas id="magnitudeChart"></canvas>
+            </div>
+            <div class="plot-container">
+                <div class="plot-title">Bode Plot: Impedance Phase</div>
+                <canvas id="phaseChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const diels = {
+            SiO2: {k:3.9, k_inf:2.1, tau0:1e-12, Ea:0.35, alpha:0.05, sig:1e-15, Eg:9.0, Dit:5e10},
+            Al2O3: {k:9.0, k_inf:3.2, tau0:5e-11, Ea:0.40, alpha:0.12, sig:1e-13, Eg:8.8, Dit:8e10},
+            HfO2: {k:25.0, k_inf:5.0, tau0:1e-10, Ea:0.45, alpha:0.18, sig:1e-12, Eg:5.8, Dit:2e11},
+            ZrO2: {k:22.0, k_inf:4.6, tau0:8e-11, Ea:0.42, alpha:0.15, sig:5e-13, Eg:5.8, Dit:1.5e11},
+            La2O3: {k:27.0, k_inf:5.5, tau0:2e-10, Ea:0.50, alpha:0.22, sig:5e-12, Eg:5.5, Dit:3e11}
+        };
+        const eps0 = 8.854e-12, qe = 1.602e-19, kB = 1.381e-23, tox = 3e-9;
+        const Agate = 2 * Math.PI * 5e-9 * 20e-9;
+
+        function getEta() { return document.getElementById('gate-sel').value === 'pi' ? 0.82 : 0.98; }
+        function getD() { return diels[document.getElementById('diel-sel').value]; }
+        function getT() { return +document.getElementById('temp-sel').value; }
+        function Cox() { const d = getD(); return eps0 * d.k * getEta() / tox; }
+        function Rs() { return (document.getElementById('gate-sel').value === 'pi' ? 500 : 400) * Math.pow(getT() / 300, 0.3); }
+        function Rox() { const d = getD(), T = getT(); const sig = d.sig * Math.exp(-d.Eg * qe / (2 * kB) * (1/T - 1/300)); return tox / (sig * Agate); }
+        function Cd() { const T = getT(); const phiF = kB * T / qe * Math.log(1e24 / 1.5e16); const Wd = Math.sqrt(2 * 11.7 * eps0 * 2 * Math.abs(phiF) / (qe * 1e24)); return 11.7 * eps0 / Wd; }
+        function Dit() { const d = getD(); let v = d.Dit; if (document.getElementById('gate-sel').value === 'omega') v *= 0.85; return v; }
+        function tauIt() { const d = getD(), T = getT(); return d.tau0 * 10 * Math.exp(d.Ea * 0.8 * qe / (kB * T)); }
+
+        function fmt(v, u) {
+            if (Math.abs(v) > 1e15) return (v / 1e15).toFixed(1) + ' P' + u;
+            if (Math.abs(v) > 1e12) return (v / 1e12).toFixed(1) + ' T' + u;
+            if (Math.abs(v) > 1e9) return (v / 1e9).toFixed(1) + ' G' + u;
+            if (Math.abs(v) > 1e6) return (v / 1e6).toFixed(1) + ' M' + u;
+            if (Math.abs(v) > 1e3) return (v / 1e3).toFixed(1) + ' k' + u;
+            if (Math.abs(v) > 1) return v.toFixed(2) + ' ' + u;
+            if (Math.abs(v) > 1e-3) return (v * 1e3).toFixed(2) + ' m' + u;
+            if (Math.abs(v) > 1e-6) return (v * 1e6).toFixed(2) + ' μ' + u;
+            if (Math.abs(v) > 1e-9) return (v * 1e9).toFixed(2) + ' n' + u;
+            if (Math.abs(v) > 1e-12) return (v * 1e12).toFixed(2) + ' p' + u;
+            return v.toExponential(2) + ' ' + u;
+        }
+
+        const info = {
+            rs: () => `<b>R_s (series resistance)</b> — contact + channel resistance. Increases with T due to phonon scattering. Value: <b>${fmt(Rs(), 'Ω')}</b>. ${document.getElementById('gate-sel').value === 'omega' ? 'Omega-Gate has lower R_s (400 Ω base) due to better contact geometry.' : 'Pi-Gate has R_s = 500 Ω base.'}`,
+            rox: () => `<b>R_ox (oxide leakage resistance)</b> — parallel path through oxide bulk via defect-assisted tunnelling. Value: <b>${fmt(Rox(), 'Ω')}</b>. Higher bandgap → higher R_ox. Temperature increases leakage exponentially (Arrhenius).`,
+            cox: () => `<b>C_ox (oxide capacitance)</b> — C_ox = η·ε₀·ε_r/t_ox. Value: <b>${fmt(Cox() * Agate, 'F')}</b> (${(Cox() * 1e3).toFixed(1)} mF/m²). Higher η (Omega) and higher k both increase C_ox.`,
+            cd: () => `<b>C_d (depletion capacitance)</b> — semiconductor depletion layer capacitance. Value: <b>${fmt(Cd() * Agate, 'F')}</b>. Affects the capacitive divider ratio C_d/(η·C_ox) in the SS equation.`,
+            git: () => `<b>G_it (interface trap conductance)</b> — energy loss from carrier capture/emission at Si/oxide interface. D_it = <b>${Dit().toExponential(1)} cm⁻²eV⁻¹</b>. τ_it = <b>${fmt(tauIt(), 's')}</b>. Extracted via conductance method. Omega-Gate reduces D_it by 15%.`,
+            cit: () => `<b>C_it (interface trap capacitance)</b> — reactive component of trap response. Frequency-dependent: C_it = D_it·arctan(ωτ_it)/(ωτ_it). Contributes to the low-frequency dispersion in C-V and the Cole-Cole arc depression.`
+        };
+
+        function showInfo(id) {
+            document.getElementById('info-panel').innerHTML = info[id]();
+        }
+
+        function updateAll() {
+            updateCircuit();
+            updatePlots();
+        }
+
+        function updateCircuit() {
+            const grid = document.getElementById('param-grid');
+            grid.innerHTML = [
+                { l: 'R_s', v: fmt(Rs(), 'Ω') },
+                { l: 'C_ox', v: (Cox() * 1e3).toFixed(1) + ' mF/m²' },
+                { l: 'R_ox', v: fmt(Rox(), 'Ω') },
+                { l: 'C_d', v: fmt(Cd() * Agate, 'F') },
+                { l: 'D_it', v: Dit().toExponential(1) + ' /cm²eV' },
+                { l: 'τ_it', v: fmt(tauIt(), 's') },
+            ].map(p => `<div class="param-card"><div class="label">${p.l}</div><div class="value">${p.v}</div></div>`).join('');
+        }
+
+        function updateSliderValue(id) {
+            const slider = document.getElementById(id);
+            const value = document.getElementById(id + '-value');
+            const val = Math.pow(10, slider.value);
+            if (id === 'freq-min') {
+                value.textContent = val >= 1e6 ? (val / 1e6).toFixed(0) + ' MHz' : val >= 1e3 ? (val / 1e3).toFixed(0) + ' kHz' : val.toFixed(0) + ' Hz';
+            } else {
+                value.textContent = val >= 1e6 ? (val / 1e6).toFixed(0) + ' MHz' : val >= 1e3 ? (val / 1e3).toFixed(0) + ' kHz' : val.toFixed(0) + ' Hz';
+            }
+        }
+
+        let magnitudeChart, phaseChart;
+
+        // Complex number operations
+        function complex(re, im) { return { re: re, im: im }; }
+        function add(a, b) { return complex(a.re + b.re, a.im + b.im); }
+        function mul(a, b) { return complex(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re); }
+        function div(a, b) {
+            const denom = b.re * b.re + b.im * b.im;
+            return complex((a.re * b.re + a.im * b.im) / denom, (a.im * b.re - a.re * b.im) / denom);
+        }
+        function abs(z) { return Math.sqrt(z.re * z.re + z.im * z.im); }
+        function angle(z) { return Math.atan2(z.im, z.re); }
+
+        function updatePlots() {
+            const freqMin = Math.pow(10, document.getElementById('freq-min').value);
+            const freqMax = Math.pow(10, document.getElementById('freq-max').value);
+            const frequencies = [];
+            for (let f = freqMin; f <= freqMax; f *= 1.1) {
+                frequencies.push(f);
+            }
+            const w = frequencies.map(f => 2 * Math.PI * f);
+
+            const Rs_val = Rs();
+            const Rox_val = Rox();
+            const Cox_val = Cox();
+            const Cd_val = Cd();
+            const Dit_val = Dit();
+            const tauIt_val = tauIt();
+
+            const Z_ox = w.map(omega => {
+                const denominator = add(complex(1, 0), mul(complex(0, 1), complex(omega * Rox_val * Cox_val, 0)));
+                return div(complex(Rox_val, 0), denominator);
+            });
+            const Z_it = w.map(omega => {
+                const Cit = Dit_val * qe * Math.atan(omega * tauIt_val) / (omega * tauIt_val);
+                const Git = Dit_val * qe * omega * tauIt_val / (1 + (omega * tauIt_val) ** 2);
+                const denominator = add(complex(Git, 0), mul(complex(0, omega * Cit), complex(1, 0)));
+                return div(complex(1, 0), denominator);
+            });
+            const Z_d = w.map(omega => {
+                const denominator = mul(complex(0, omega * Cd_val), complex(1, 0));
+                return div(complex(1, 0), denominator);
+            });
+
+            const Z_parallel = Z_d.map((zd, i) => {
+                const z_it = Z_it[i];
+                const z_ox = Z_ox[i];
+                const sum_reciprocal = add(add(div(complex(1, 0), zd), div(complex(1, 0), z_it)), div(complex(1, 0), z_ox));
+                return div(complex(1, 0), sum_reciprocal);
+            });
+
+            const Z_total = Z_parallel.map(zp => add(complex(Rs_val, 0), zp));
+
+            const mag = Z_total.map(z => 20 * Math.log10(abs(z)));
+            const phase = Z_total.map(z => angle(z) * 180 / Math.PI);
+
+            if (!magnitudeChart) {
+                const ctxMag = document.getElementById('magnitudeChart').getContext('2d');
+                magnitudeChart = new Chart(ctxMag, {
+                    type: 'line',
+                    data: {
+                        labels: frequencies.map(f => f.toFixed(0)),
+                        datasets: [{
+                            label: 'Magnitude [dB]',
+                            data: mag,
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'logarithmic',
+                                title: { display: true, text: 'Frequency [Hz]' }
+                            },
+                            y: {
+                                title: { display: true, text: '|Z| [dB]' }
+                            }
+                        }
+                    }
+                });
+            } else {
+                magnitudeChart.data.labels = frequencies.map(f => f.toFixed(0));
+                magnitudeChart.data.datasets[0].data = mag;
+                magnitudeChart.update();
+            }
+
+            if (!phaseChart) {
+                const ctxPhase = document.getElementById('phaseChart').getContext('2d');
+                phaseChart = new Chart(ctxPhase, {
+                    type: 'line',
+                    data: {
+                        labels: frequencies.map(f => f.toFixed(0)),
+                        datasets: [{
+                            label: 'Phase [degrees]',
+                            data: phase,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'logarithmic',
+                                title: { display: true, text: 'Frequency [Hz]' }
+                            },
+                            y: {
+                                title: { display: true, text: '|Z| Phase [°]' },
+                                min: -90,
+                                max: 0
+                            }
+                        }
+                    }
+                });
+            } else {
+                phaseChart.data.labels = frequencies.map(f => f.toFixed(0));
+                phaseChart.data.datasets[0].data = phase;
+                phaseChart.update();
+            }
+        }
+
+        // Initialize
+        updateAll();
+        updateSliderValue('freq-min');
+        updateSliderValue('freq-max');
+    </script>
+</body>
+</html>

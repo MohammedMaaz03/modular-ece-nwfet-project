@@ -1,0 +1,18 @@
+LIST OF FIGURES (Chapter 9 Onwards)
+================================================================
+
+Figure 9.2: Cole-Cole plots showing dielectric relaxation for five gate dielectrics at T = 300 K
+Figure 9.3: Bode plots (|Z| and phase vs frequency) for five dielectrics at T = 300 K  
+Figure 9.6: AC conductivity vs frequency for five dielectrics at T = 300 K
+Figure 9.8: Arrhenius plots of dielectric relaxation time for all five dielectrics (77-600 K)
+
+Figure 10.3: Output family curves (ID vs VDS) showing enhanced drive capability for Omega-Gate
+Figure 10.4: Semilogarithmic transconductance plots showing subthreshold swing performance
+
+Additional Related Figures:
+Figure 8.3: 3D transfer characteristics for Pi-Gate and Omega-Gate across all high-k dielectrics
+Figure 7.5: Drain current evolution from cryogenic (77K) through elevated (500K) temperatures
+
+================================================================
+Note: Page numbers were not clearly visible in the extracted document content.
+Figures are listed in numerical order with one-line descriptions as requested.

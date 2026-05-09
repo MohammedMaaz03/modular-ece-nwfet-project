@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - NWFET Energy Band Diagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .signup-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .password-strength {
+            margin-top: 5px;
+            font-size: 12px;
+            height: 4px;
+            background: #e1e8ed;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        .password-strength-bar.weak {
+            width: 33%;
+            background: #e74c3c;
+        }
+
+        .password-strength-bar.medium {
+            width: 66%;
+            background: #f39c12;
+        }
+
+        .password-strength-bar.strong {
+            width: 100%;
+            background: #27ae60;
+        }
+
+        .signup-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .signup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .signup-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-link {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e8ed;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #fcc;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #cfc;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #27ae60;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .terms-checkbox {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .terms-checkbox input {
+            margin-right: 8px;
+            margin-top: 2px;
+        }
+
+        .terms-checkbox label {
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            line-height: 1.4;
+        }
+
+        .terms-checkbox a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .terms-checkbox a:hover {
+            text-decoration: underline;
+        }
+
+        .validation-message {
+            font-size: 12px;
+            color: #e74c3c;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="logo">
+            <span style="font-size: 48px; color: #667eea; margin-bottom: 10px;">⚛️</span>
+            <h1>Create Account</h1>
+            <p>Join NWFET Band Diagram Platform</p>
+        </div>
+
+        <div class="error-message" id="error-message"></div>
+        <div class="success-message" id="success-message"></div>
+
+        <form id="signup-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i> Username *
+                    </label>
+                    <input type="text" id="username" name="username" required 
+                           placeholder="Choose a username" minlength="3" maxlength="20">
+                    <div class="validation-message" id="username-validation"></div>
+                </div>
+                <div class="form-group">
+                    <label for="full_name">
+                        <i class="fas fa-id-card"></i> Full Name
+                    </label>
+                    <input type="text" id="full_name" name="full_name" 
+                           placeholder="Your full name" maxlength="50">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">
+                    <i class="fas fa-envelope"></i> Email *
+                </label>
+                <input type="email" id="email" name="email" required 
+                       placeholder="your.email@example.com">
+                <div class="validation-message" id="email-validation"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">
+                    <i class="fas fa-lock"></i> Password *
+                </label>
+                <input type="password" id="password" name="password" required 
+                       placeholder="Create a strong password" minlength="6">
+                <div class="password-strength">
+                    <div class="password-strength-bar" id="password-strength-bar"></div>
+                </div>
+                <div class="validation-message" id="password-validation"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">
+                    <i class="fas fa-lock"></i> Confirm Password *
+                </label>
+                <input type="password" id="confirm_password" name="confirm_password" required 
+                       placeholder="Confirm your password">
+                <div class="validation-message" id="confirm-password-validation"></div>
+            </div>
+
+            <div class="terms-checkbox">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms">
+                    I agree to the <a href="#" onclick="showTerms()">Terms of Service</a> and <a href="#" onclick="showPrivacy()">Privacy Policy</a>
+                </label>
+            </div>
+
+            <button type="submit" class="signup-btn" id="signup-btn">
+                <i class="fas fa-user-plus"></i> Create Account
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <span style="margin-left: 10px;">Creating account...</span>
+            </div>
+        </form>
+
+        <div class="login-link">
+            <p>Already have an account? <a href="/login">Sign in here</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            const strengthBar = document.getElementById('password-strength-bar');
+            
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+            if (password.match(/[0-9]/)) strength++;
+            if (password.match(/[^a-zA-Z0-9]/)) strength++;
+            
+            strengthBar.className = 'password-strength-bar';
+            
+            if (strength <= 1) {
+                strengthBar.classList.add('weak');
+            } else if (strength === 2) {
+                strengthBar.classList.add('medium');
+            } else {
+                strengthBar.classList.add('strong');
+            }
+        }
+
+        // Real-time validation
+        document.getElementById('username').addEventListener('input', function() {
+            const username = this.value;
+            const validation = document.getElementById('username-validation');
+            
+            if (username.length < 3) {
+                validation.textContent = 'Username must be at least 3 characters';
+                validation.style.display = 'block';
+            } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                validation.textContent = 'Username can only contain letters, numbers, and underscores';
+                validation.style.display = 'block';
+            } else {
+                validation.style.display = 'none';
+            }
+        });
+
+        document.getElementById('email').addEventListener('input', function() {
+            const email = this.value;
+            const validation = document.getElementById('email-validation');
+            
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                validation.textContent = 'Please enter a valid email address';
+                validation.style.display = 'block';
+            } else {
+                validation.style.display = 'none';
+            }
+        });
+
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const validation = document.getElementById('password-validation');
+            
+            checkPasswordStrength(password);
+            
+            if (password.length < 6) {
+                validation.textContent = 'Password must be at least 6 characters';
+                validation.style.display = 'block';
+            } else {
+                validation.style.display = 'none';
+            }
+            
+            // Check confirm password if it has value
+            const confirmPassword = document.getElementById('confirm_password').value;
+            if (confirmPassword) {
+                validatePasswordMatch();
+            }
+        });
+
+        document.getElementById('confirm_password').addEventListener('input', validatePasswordMatch);
+
+        function validatePasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            const validation = document.getElementById('confirm-password-validation');
+            
+            if (password !== confirmPassword) {
+                validation.textContent = 'Passwords do not match';
+                validation.style.display = 'block';
+            } else {
+                validation.style.display = 'none';
+            }
+        }
+
+        // Form submission
+        document.getElementById('signup-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const errorDiv = document.getElementById('error-message');
+            const successDiv = document.getElementById('success-message');
+            const loadingDiv = document.getElementById('loading');
+            const signupBtn = document.getElementById('signup-btn');
+            
+            // Validate all fields
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            const termsAccepted = document.getElementById('terms').checked;
+            
+            if (password !== confirmPassword) {
+                errorDiv.textContent = 'Passwords do not match';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!termsAccepted) {
+                errorDiv.textContent = 'You must accept the terms of service';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Hide messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            // Get form data
+            const formData = new FormData(this);
+            const data = new URLSearchParams(formData);
+            
+            // Show loading
+            loadingDiv.style.display = 'block';
+            signupBtn.disabled = true;
+            signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+            
+            try {
+                const response = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: data
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    successDiv.textContent = 'Account created successfully! Redirecting to login...';
+                    successDiv.style.display = 'block';
+                    
+                    // Redirect to login
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    errorDiv.textContent = result.error || 'Account creation failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.style.display = 'block';
+            } finally {
+                // Hide loading
+                loadingDiv.style.display = 'none';
+                signupBtn.disabled = false;
+                signupBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+            }
+        });
+
+        function showTerms() {
+            alert('Terms of Service:\n\n1. Use this platform for educational and research purposes\n2. Do not share your login credentials\n3. Respect intellectual property rights\n4. Report any bugs or issues\n5. Be respectful to other users');
+        }
+
+        function showPrivacy() {
+            alert('Privacy Policy:\n\n1. We collect only necessary information for account management\n2. Your calculation results are stored privately\n3. We do not share your data with third parties\n4. You can request data deletion at any time\n5. We use cookies for session management only');
+        }
+    </script>
+</body>
+</html>

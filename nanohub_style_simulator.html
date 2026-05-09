@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NWFET Simulation Hub - Pi-Gate vs Omega-Gate</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js@1.58.0/dist/plotly.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-menu a:hover {
+            opacity: 0.8;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 20px;
+        }
+
+        .input-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            padding: 25px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .panel-header {
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .panel-header h2 {
+            color: #2c3e50;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        .input-section h3 {
+            color: #34495e;
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .range-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .range-input input[type="range"] {
+            flex: 1;
+        }
+
+        .range-value {
+            min-width: 60px;
+            text-align: center;
+            font-weight: 600;
+            color: #3498db;
+        }
+
+        .gate-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .gate-option {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .gate-option:hover {
+            border-color: #3498db;
+            transform: translateY(-2px);
+        }
+
+        .gate-option.selected {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .simulate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .simulate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .simulate-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            padding: 25px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .results-header h2 {
+            color: #2c3e50;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-ready {
+            background: #e8f5e8;
+            color: #27ae60;
+        }
+
+        .status-running {
+            background: #fff3cd;
+            color: #f39c12;
+        }
+
+        .status-complete {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .simulation-tabs {
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #555;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn:hover {
+            color: #3498db;
+        }
+
+        .tab-btn.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            color: #555;
+            font-size: 14px;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+
+        .results-table th {
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+
+        .results-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .export-btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #2980b9;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: #555;
+        }
+
+        .welcome-message h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #34495e;
+        }
+
+        .welcome-message p {
+            font-size: 16px;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-panel {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">⚛</div>
+                <h1>NWFET Simulation Hub</h1>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="#simulator">Simulator</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#help">Help</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="input-panel">
+            <div class="panel-header">
+                <h2>🔬 Simulation Parameters</h2>
+            </div>
+
+            <div class="input-section">
+                <h3>Gate Architecture</h3>
+                <div class="gate-selector">
+                    <div class="gate-option selected" data-gate="pi">
+                        <strong>Pi-Gate</strong>
+                        <div style="font-size: 12px; margin-top: 5px;">Partial wrap</div>
+                    </div>
+                    <div class="gate-option" data-gate="omega">
+                        <strong>Omega-Gate</strong>
+                        <div style="font-size: 12px; margin-top: 5px;">Full wrap</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <h3>Material Properties</h3>
+                <div class="form-group">
+                    <label for="material">Dielectric Material</label>
+                    <select id="material">
+                        <option value="SiO2">SiO₂ (k=3.9)</option>
+                        <option value="Al2O3">Al₂O₃ (k=9.0)</option>
+                        <option value="HfO2" selected>HfO₂ (k=25.0)</option>
+                        <option value="ZrO2">ZrO₂ (k=25.0)</option>
+                        <option value="La2O3">La₂O₃ (k=30.0)</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dielectric-constant">Dielectric Constant (k)</label>
+                    <input type="number" id="dielectric-constant" value="25.0" min="1" max="50" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="oxide-thickness">Oxide Thickness</label>
+                    <div class="range-input">
+                        <input type="range" id="oxide-thickness" min="1" max="10" value="2" step="0.1">
+                        <div class="range-value">2.0 nm</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <h3>Device Parameters</h3>
+                <div class="form-group">
+                    <label for="channel-length">Channel Length</label>
+                    <input type="number" id="channel-length" value="10" min="5" max="50" step="1">
+                    <small style="color: #666;">nm</small>
+                </div>
+                <div class="form-group">
+                    <label for="channel-width">Channel Width</label>
+                    <input type="number" id="channel-width" value="10" min="5" max="50" step="1">
+                    <small style="color: #666;">nm</small>
+                </div>
+                <div class="form-group">
+                    <label for="voltage-range">Gate Voltage Range</label>
+                    <div class="range-input">
+                        <input type="range" id="voltage-range" min="0" max="5" value="2" step="0.1">
+                        <div class="range-value">0 - 2.0 V</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="drain-voltage">Drain Voltage</label>
+                    <input type="number" id="drain-voltage" value="0.1" min="0.01" max="1" step="0.01">
+                    <small style="color: #666;">V</small>
+                </div>
+                <div class="form-group">
+                    <label for="temperature">Temperature</label>
+                    <input type="number" id="temperature" value="300" min="77" max="500" step="1">
+                    <small style="color: #666;">K</small>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <h3>Simulation Options</h3>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" checked> I-V Characteristics
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" checked> Transfer Characteristics
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" checked> Capacitance-Voltage
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox"> EIS Analysis
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox"> Band Structure
+                    </label>
+                </div>
+            </div>
+
+            <button class="simulate-btn" onclick="runSimulation()">
+                🚀 Run Simulation
+            </button>
+        </aside>
+
+        <main class="results-panel">
+            <div class="results-header">
+                <h2>📊 Simulation Results</h2>
+                <div class="status-indicator status-ready">
+                    <div class="status-dot"></div>
+                    Ready to simulate
+                </div>
+            </div>
+
+            <div id="welcome-content" class="welcome-message">
+                <h3>Welcome to NWFET Simulation Hub</h3>
+                <p>
+                    Configure your device parameters on the left panel and click "Run Simulation" to get started. 
+                    This tool provides comprehensive analysis of Pi-Gate and Omega-Gate Nanowire FETs, 
+                    including I-V characteristics, transfer curves, capacitance analysis, and more.
+                </p>
+            </div>
+
+            <div id="results-content" style="display: none;">
+                <div class="simulation-tabs">
+                    <button class="tab-btn active" onclick="switchTab('iv')">I-V Characteristics</button>
+                    <button class="tab-btn" onclick="switchTab('transfer')">Transfer</button>
+                    <button class="tab-btn" onclick="switchTab('cv')">C-V Analysis</button>
+                    <button class="tab-btn" onclick="switchTab('eis')">EIS Analysis</button>
+                    <button class="tab-btn" onclick="switchTab('comparison')">Comparison</button>
+                    <button class="tab-btn" onclick="switchTab('metrics')">Metrics</button>
+                </div>
+
+                <div id="iv-tab" class="tab-content active">
+                    <div class="chart-container">
+                        <canvas id="iv-chart"></canvas>
+                    </div>
+                </div>
+
+                <div id="transfer-tab" class="tab-content">
+                    <div class="chart-container">
+                        <canvas id="transfer-chart"></canvas>
+                    </div>
+                </div>
+
+                <div id="cv-tab" class="tab-content">
+                    <div class="chart-container">
+                        <canvas id="cv-chart"></canvas>
+                    </div>
+                </div>
+
+                <div id="eis-tab" class="tab-content">
+                    <div class="chart-container">
+                        <canvas id="eis-chart"></canvas>
+                    </div>
+                </div>
+
+                <div id="comparison-tab" class="tab-content">
+                    <div class="chart-container">
+                        <canvas id="comparison-chart"></canvas>
+                    </div>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Pi-Gate</th>
+                                <th>Omega-Gate</th>
+                                <th>Improvement</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Threshold Voltage (V)</td>
+                                <td id="vth-pi">-</td>
+                                <td id="vth-omega">-</td>
+                                <td id="vth-improvement">-</td>
+                            </tr>
+                            <tr>
+                                <td>Subthreshold Slope (mV/dec)</td>
+                                <td id="ss-pi">-</td>
+                                <td id="ss-omega">-</td>
+                                <td id="ss-improvement">-</td>
+                            </tr>
+                            <tr>
+                                <td>On/Off Ratio</td>
+                                <td id="onoff-pi">-</td>
+                                <td id="onoff-omega">-</td>
+                                <td id="onoff-improvement">-</td>
+                            </tr>
+                            <tr>
+                                <td>Transconductance (mS)</td>
+                                <td id="gm-pi">-</td>
+                                <td id="gm-omega">-</td>
+                                <td id="gm-improvement">-</td>
+                            </tr>
+                            <tr>
+                                <td>On Current (μA)</td>
+                                <td id="ion-pi">-</td>
+                                <td id="ion-omega">-</td>
+                                <td id="ion-improvement">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="metrics-tab" class="tab-content">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-value" id="metric-vth">-</div>
+                            <div class="metric-label">Threshold Voltage (V)</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="metric-ss">-</div>
+                            <div class="metric-label">Subthreshold Slope (mV/dec)</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="metric-onoff">-</div>
+                            <div class="metric-label">On/Off Ratio</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="metric-gm">-</div>
+                            <div class="metric-label">Transconductance (mS)</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="metric-ion">-</div>
+                            <div class="metric-label">On Current (μA)</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="metric-ioff">-</div>
+                            <div class="metric-label">Off Current (pA)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-buttons">
+                    <button class="export-btn" onclick="exportResults('csv')">📊 Export CSV</button>
+                    <button class="export-btn" onclick="exportResults('json')">📄 Export JSON</button>
+                    <button class="export-btn" onclick="exportResults('pdf')">📑 Export PDF</button>
+                    <button class="export-btn" onclick="shareResults()">🔗 Share Results</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Global variables
+        let simulationData = {};
+        let charts = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            updateMaterialProperties();
+        });
+
+        function initializeEventListeners() {
+            // Gate selection
+            document.querySelectorAll('.gate-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.gate-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+
+            // Material selection
+            document.getElementById('material').addEventListener('change', updateMaterialProperties);
+
+            // Range inputs
+            document.getElementById('oxide-thickness').addEventListener('input', function() {
+                this.nextElementSibling.textContent = this.value + ' nm';
+            });
+
+            document.getElementById('voltage-range').addEventListener('input', function() {
+                this.nextElementSibling.textContent = '0 - ' + this.value + ' V';
+            });
+        }
+
+        function updateMaterialProperties() {
+            const material = document.getElementById('material').value;
+            const kInput = document.getElementById('dielectric-constant');
+            
+            const kValues = {
+                'SiO2': 3.9,
+                'Al2O3': 9.0,
+                'HfO2': 25.0,
+                'ZrO2': 25.0,
+                'La2O3': 30.0
+            };
+            
+            if (material !== 'custom') {
+                kInput.value = kValues[material];
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        async function runSimulation() {
+            const button = document.querySelector('.simulate-btn');
+            const statusIndicator = document.querySelector('.status-indicator');
+            const welcomeContent = document.getElementById('welcome-content');
+            const resultsContent = document.getElementById('results-content');
+            
+            // Update UI
+            button.disabled = true;
+            button.textContent = '⏳ Simulating...';
+            statusIndicator.className = 'status-indicator status-running';
+            statusIndicator.innerHTML = '<div class="status-dot"></div> Running simulation';
+            
+            // Show loading overlays
+            document.querySelectorAll('.chart-container').forEach(container => {
+                container.innerHTML = '<div class="loading-overlay"><div class="loading-spinner"></div></div>';
+            });
+            
+            // Get parameters
+            const params = getSimulationParameters();
+            
+            // Simulate processing delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Run simulation
+            simulationData = performSimulation(params);
+            
+            // Update UI
+            button.disabled = false;
+            button.textContent = '🚀 Run Simulation';
+            statusIndicator.className = 'status-indicator status-complete';
+            statusIndicator.innerHTML = '<div class="status-dot"></div> Simulation complete';
+            
+            // Show results
+            welcomeContent.style.display = 'none';
+            resultsContent.style.display = 'block';
+            
+            // Update charts and metrics
+            updateAllCharts();
+            updateMetrics();
+            updateComparisonTable();
+            
+            // Remove loading overlays
+            document.querySelectorAll('.loading-overlay').forEach(overlay => {
+                overlay.remove();
+            });
+        }
+
+        function getSimulationParameters() {
+            return {
+                gateType: document.querySelector('.gate-option.selected').dataset.gate,
+                material: document.getElementById('material').value,
+                dielectricConstant: parseFloat(document.getElementById('dielectric-constant').value),
+                oxideThickness: parseFloat(document.getElementById('oxide-thickness').value),
+                channelLength: parseFloat(document.getElementById('channel-length').value),
+                channelWidth: parseFloat(document.getElementById('channel-width').value),
+                voltageRange: parseFloat(document.getElementById('voltage-range').value),
+                drainVoltage: parseFloat(document.getElementById('drain-voltage').value),
+                temperature: parseFloat(document.getElementById('temperature').value)
+            };
+        }
+
+        function performSimulation(params) {
+            const { gateType, dielectricConstant, oxideThickness, voltageRange, temperature } = params;
+            
+            // Generate voltage points
+            const vgs = [];
+            for (let v = 0; v <= voltageRange; v += voltageRange/100) {
+                vgs.push(v);
+            }
+            
+            // Calculate I-V characteristics
+            const ivData = calculateIVCharacteristics(vgs, params);
+            
+            // Calculate transfer characteristics
+            const transferData = calculateTransferCharacteristics(vgs, params);
+            
+            // Calculate C-V characteristics
+            const cvData = calculateCVCharacteristics(vgs, params);
+            
+            // Calculate EIS data
+            const eisData = calculateEISCharacteristics(params);
+            
+            // Calculate metrics
+            const metrics = calculateMetrics(ivData, transferData, params);
+            
+            return {
+                parameters: params,
+                iv: ivData,
+                transfer: transferData,
+                cv: cvData,
+                eis: eisData,
+                metrics: metrics
+            };
+        }
+
+        function calculateIVCharacteristics(vgs, params) {
+            const { gateType, dielectricConstant, oxideThickness, temperature } = params;
+            const ids = [];
+            
+            const vth = gateType === 'pi' ? 0.45 : 0.38;
+            const mobility = gateType === 'pi' ? 0.05 : 0.08;
+            const tempFactor = 1 + (temperature - 300) * 0.001;
+            
+            vgs.forEach(vg => {
+                let current = 0;
+                if (vg > vth) {
+                    const vov = vg - vth;
+                    current = mobility * dielectricConstant * (50/oxideThickness) * vov * vov * tempFactor;
+                }
+                ids.push(current * 1e6); // Convert to μA
+            });
+            
+            return { vgs, ids };
+        }
+
+        function calculateTransferCharacteristics(vgs, params) {
+            const { gateType, dielectricConstant, oxideThickness } = params;
+            const gm = [];
+            
+            const vth = gateType === 'pi' ? 0.45 : 0.38;
+            const mobility = gateType === 'pi' ? 0.05 : 0.08;
+            
+            vgs.forEach(vg => {
+                let transconductance = 0;
+                if (vg > vth) {
+                    transconductance = mobility * dielectricConstant * (50/oxideThickness) * 2 * (vg - vth);
+                }
+                gm.push(transconductance * 1e3); // Convert to mS
+            });
+            
+            return { vgs, gm };
+        }
+
+        function calculateCVCharacteristics(vgs, params) {
+            const { gateType, dielectricConstant, oxideThickness } = params;
+            const capacitance = [];
+            
+            const cox = dielectricConstant * 8.85e-12 * (100/oxideThickness); // F/m²
+            
+            vgs.forEach(vg => {
+                let c = cox;
+                if (gateType === 'pi') {
+                    c *= (1 / (1 + Math.exp((vg + 0.5) * 5)));
+                } else {
+                    c *= (1 / (1 + Math.exp((vg + 0.3) * 6)));
+                }
+                capacitance.push(c * 1e12); // Convert to pF
+            });
+            
+            return { vgs, capacitance };
+        }
+
+        function calculateEISCharacteristics(params) {
+            const { gateType, dielectricConstant, oxideThickness } = params;
+            
+            // Generate frequency points
+            const frequencies = [];
+            for (let f = 1e2; f <= 1e6; f *= 1.1) {
+                frequencies.push(f);
+            }
+            
+            const impedance = frequencies.map(freq => {
+                const omega = 2 * Math.PI * freq;
+                const rs = gateType === 'pi' ? 10 : 8;
+                const rct = gateType === 'pi' ? 50 : 35;
+                const cdl = dielectricConstant * 1e-6 * (50/oxideThickness);
+                
+                const z = rs + rct / (1 + 1j * omega * rct * cdl);
+                return {
+                    frequency: freq,
+                    real: z.real,
+                    imag: z.imag,
+                    magnitude: Math.abs(z),
+                    phase: Math.atan2(z.imag, z.real)
+                };
+            });
+            
+            return { frequencies, impedance };
+        }
+
+        function calculateMetrics(ivData, transferData, params) {
+            const { gateType } = params;
+            const { vgs, ids } = ivData;
+            const { gm } = transferData;
+            
+            // Find threshold voltage
+            let vth = 0;
+            for (let i = 1; i < ids.length; i++) {
+                if (ids[i] > 1e-6) { // 1 nA threshold
+                    vth = vgs[i];
+                    break;
+                }
+            }
+            
+            // Calculate subthreshold slope
+            let ss = 0;
+            for (let i = 10; i < Math.min(50, vgs.length); i++) {
+                if (ids[i] > 0 && ids[i-1] > 0) {
+                    const dv = vgs[i] - vgs[i-1];
+                    const di = Math.log10(ids[i]/ids[i-1]);
+                    if (di > 0) {
+                        ss = dv / di * 1000; // mV/dec
+                        break;
+                    }
+                }
+            }
+            
+            // Find on and off currents
+            const ion = Math.max(...ids);
+            const ioff = Math.min(...ids.filter(id => id > 0));
+            const onOffRatio = ion / ioff;
+            
+            // Maximum transconductance
+            const gmMax = Math.max(...gm);
+            
+            return {
+                thresholdVoltage: vth,
+                subthresholdSlope: ss,
+                onCurrent: ion,
+                offCurrent: ioff,
+                onOffRatio: onOffRatio,
+                transconductance: gmMax
+            };
+        }
+
+        function updateAllCharts() {
+            updateIVChart();
+            updateTransferChart();
+            updateCVChart();
+            updateEISChart();
+            updateComparisonChart();
+        }
+
+        function updateIVChart() {
+            const ctx = document.getElementById('iv-chart').getContext('2d');
+            
+            if (charts.iv) {
+                charts.iv.destroy();
+            }
+            
+            const { vgs, ids } = simulationData.iv;
+            const { gateType } = simulationData.parameters;
+            
+            charts.iv = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: vgs.map(v => v.toFixed(2)),
+                    datasets: [{
+                        label: `${gateType === 'pi' ? 'Pi-Gate' : 'Omega-Gate'} I-V Characteristics`,
+                        data: ids,
+                        borderColor: gateType === 'pi' ? '#3498db' : '#e74c3c',
+                        backgroundColor: gateType === 'pi' ? 'rgba(52, 152, 219, 0.1)' : 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'I-V Characteristics',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Gate Voltage (V)',
+                                font: { weight: 'bold' }
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Drain Current (μA)',
+                                font: { weight: 'bold' }
+                            },
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTransferChart() {
+            const ctx = document.getElementById('transfer-chart').getContext('2d');
+            
+            if (charts.transfer) {
+                charts.transfer.destroy();
+            }
+            
+            const { vgs, gm } = simulationData.transfer;
+            const { gateType } = simulationData.parameters;
+            
+            charts.transfer = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: vgs.map(v => v.toFixed(2)),
+                    datasets: [{
+                        label: `Transconductance (${gateType === 'pi' ? 'Pi-Gate' : 'Omega-Gate'})`,
+                        data: gm,
+                        borderColor: gateType === 'pi' ? '#27ae60' : '#f39c12',
+                        backgroundColor: gateType === 'pi' ? 'rgba(39, 174, 96, 0.1)' : 'rgba(243, 156, 18, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Transfer Characteristics',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Gate Voltage (V)',
+                                font: { weight: 'bold' }
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Transconductance (mS)',
+                                font: { weight: 'bold' }
+                            },
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCVChart() {
+            const ctx = document.getElementById('cv-chart').getContext('2d');
+            
+            if (charts.cv) {
+                charts.cv.destroy();
+            }
+            
+            const { vgs, capacitance } = simulationData.cv;
+            const { gateType } = simulationData.parameters;
+            
+            charts.cv = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: vgs.map(v => v.toFixed(2)),
+                    datasets: [{
+                        label: `C-V Characteristics (${gateType === 'pi' ? 'Pi-Gate' : 'Omega-Gate'})`,
+                        data: capacitance,
+                        borderColor: '#9b59b6',
+                        backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Capacitance-Voltage Characteristics',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Gate Voltage (V)',
+                                font: { weight: 'bold' }
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Capacitance (pF)',
+                                font: { weight: 'bold' }
+                            },
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateEISChart() {
+            const ctx = document.getElementById('eis-chart').getContext('2d');
+            
+            if (charts.eis) {
+                charts.eis.destroy();
+            }
+            
+            const { impedance } = simulationData.eis;
+            const { gateType } = simulationData.parameters;
+            
+            const real = impedance.map(z => z.real);
+            const imag = impedance.map(z => -z.imag);
+            
+            charts.eis = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: `Nyquist Plot (${gateType === 'pi' ? 'Pi-Gate' : 'Omega-Gate'})`,
+                        data: real.map((r, i) => ({x: r, y: imag[i]})),
+                        backgroundColor: gateType === 'pi' ? '#3498db' : '#e74c3c',
+                        borderColor: gateType === 'pi' ? '#2980b9' : '#c0392b',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        showLine: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'EIS Analysis - Nyquist Plot',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Z\' (Ω)',
+                                font: { weight: 'bold' }
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '-Z\'\' (Ω)',
+                                font: { weight: 'bold' }
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateComparisonChart() {
+            const ctx = document.getElementById('comparison-chart').getContext('2d');
+            
+            if (charts.comparison) {
+                charts.comparison.destroy();
+            }
+            
+            // Simulate both gate types for comparison
+            const piParams = {...simulationData.parameters, gateType: 'pi'};
+            const omegaParams = {...simulationData.parameters, gateType: 'omega'};
+            
+            const piData = performSimulation(piParams);
+            const omegaData = performSimulation(omegaParams);
+            
+            charts.comparison = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Threshold\nVoltage (V)', 'Subthreshold\nSlope (mV/dec)', 'On/Off\nRatio', 'Transconductance\n(mS)', 'On Current\n(μA)'],
+                    datasets: [
+                        {
+                            label: 'Pi-Gate',
+                            data: [
+                                piData.metrics.thresholdVoltage,
+                                piData.metrics.subthresholdSlope,
+                                Math.log10(piData.metrics.onOffRatio),
+                                piData.metrics.transconductance,
+                                piData.metrics.onCurrent
+                            ],
+                            backgroundColor: 'rgba(52, 152, 219, 0.8)',
+                            borderColor: '#3498db',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Omega-Gate',
+                            data: [
+                                omegaData.metrics.thresholdVoltage,
+                                omegaData.metrics.subthresholdSlope,
+                                Math.log10(omegaData.metrics.onOffRatio),
+                                omegaData.metrics.transconductance,
+                                omegaData.metrics.onCurrent
+                            ],
+                            backgroundColor: 'rgba(231, 76, 60, 0.8)',
+                            borderColor: '#e74c3c',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Pi-Gate vs Omega-Gate Performance Comparison',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Normalized Values',
+                                font: { weight: 'bold' }
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateMetrics() {
+            const metrics = simulationData.metrics;
+            
+            document.getElementById('metric-vth').textContent = metrics.thresholdVoltage.toFixed(3);
+            document.getElementById('metric-ss').textContent = metrics.subthresholdSlope.toFixed(1);
+            document.getElementById('metric-onoff').textContent = metrics.onOffRatio.toExponential(1);
+            document.getElementById('metric-gm').textContent = metrics.transconductance.toFixed(2);
+            document.getElementById('metric-ion').textContent = metrics.onCurrent.toFixed(2);
+            document.getElementById('metric-ioff').textContent = (metrics.offCurrent * 1e3).toFixed(2);
+        }
+
+        function updateComparisonTable() {
+            // Simulate both gate types for comparison
+            const piParams = {...simulationData.parameters, gateType: 'pi'};
+            const omegaParams = {...simulationData.parameters, gateType: 'omega'};
+            
+            const piData = performSimulation(piParams);
+            const omegaData = performSimulation(omegaParams);
+            
+            // Update table
+            document.getElementById('vth-pi').textContent = piData.metrics.thresholdVoltage.toFixed(3);
+            document.getElementById('vth-omega').textContent = omegaData.metrics.thresholdVoltage.toFixed(3);
+            document.getElementById('vth-improvement').textContent = ((piData.metrics.thresholdVoltage - omegaData.metrics.thresholdVoltage) / piData.metrics.thresholdVoltage * 100).toFixed(1) + '%';
+            
+            document.getElementById('ss-pi').textContent = piData.metrics.subthresholdSlope.toFixed(1);
+            document.getElementById('ss-omega').textContent = omegaData.metrics.subthresholdSlope.toFixed(1);
+            document.getElementById('ss-improvement').textContent = ((piData.metrics.subthresholdSlope - omegaData.metrics.subthresholdSlope) / piData.metrics.subthresholdSlope * 100).toFixed(1) + '%';
+            
+            document.getElementById('onoff-pi').textContent = piData.metrics.onOffRatio.toExponential(1);
+            document.getElementById('onoff-omega').textContent = omegaData.metrics.onOffRatio.toExponential(1);
+            document.getElementById('onoff-improvement').textContent = (omegaData.metrics.onOffRatio / piData.metrics.onOffRatio).toFixed(1) + 'x';
+            
+            document.getElementById('gm-pi').textContent = piData.metrics.transconductance.toFixed(2);
+            document.getElementById('gm-omega').textContent = omegaData.metrics.transconductance.toFixed(2);
+            document.getElementById('gm-improvement').textContent = ((omegaData.metrics.transconductance - piData.metrics.transconductance) / piData.metrics.transconductance * 100).toFixed(1) + '%';
+            
+            document.getElementById('ion-pi').textContent = piData.metrics.onCurrent.toFixed(2);
+            document.getElementById('ion-omega').textContent = omegaData.metrics.onCurrent.toFixed(2);
+            document.getElementById('ion-improvement').textContent = ((omegaData.metrics.onCurrent - piData.metrics.onCurrent) / piData.metrics.onCurrent * 100).toFixed(1) + '%';
+        }
+
+        function exportResults(format) {
+            const data = simulationData;
+            
+            if (format === 'csv') {
+                exportCSV(data);
+            } else if (format === 'json') {
+                exportJSON(data);
+            } else if (format === 'pdf') {
+                alert('PDF export would be implemented with a library like jsPDF');
+            }
+        }
+
+        function exportCSV(data) {
+            let csv = 'Parameter,Value\n';
+            csv += `Gate Type,${data.parameters.gateType}\n`;
+            csv += `Material,${data.parameters.material}\n`;
+            csv += `Dielectric Constant,${data.parameters.dielectricConstant}\n`;
+            csv += `Oxide Thickness,${data.parameters.oxideThickness} nm\n`;
+            csv += `Threshold Voltage,${data.metrics.thresholdVoltage} V\n`;
+            csv += `Subthreshold Slope,${data.metrics.subthresholdSlope} mV/dec\n`;
+            csv += `On/Off Ratio,${data.metrics.onOffRatio}\n`;
+            csv += `Transconductance,${data.metrics.transconductance} mS\n`;
+            
+            downloadFile(csv, 'simulation_results.csv', 'text/csv');
+        }
+
+        function exportJSON(data) {
+            const json = JSON.stringify(data, null, 2);
+            downloadFile(json, 'simulation_results.json', 'application/json');
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function shareResults() {
+            const shareData = {
+                title: 'NWFET Simulation Results',
+                text: `Check out my ${simulationData.parameters.gateType}-gate NWFET simulation with ${simulationData.parameters.material} dielectric`,
+                url: window.location.href
+            };
+            
+            if (navigator.share) {
+                navigator.share(shareData);
+            } else {
+                alert('Share link copied to clipboard (would implement clipboard API)');
+            }
+        }
+    </script>
+</body>
+</html>

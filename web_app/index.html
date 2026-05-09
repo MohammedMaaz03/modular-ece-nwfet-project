@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NWFET Energy Band Diagram Program</title>
+    
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    
+    <!-- Local Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Meta Tags -->
+    <meta name="description" content="Interactive Energy Band Diagram Calculator for Pi-Gate and Omega-Gate Nanowire FETs">
+    <meta name="keywords" content="NWFET, Energy Band Diagram, Nanowire FET, Pi-Gate, Omega-Gate, Semiconductor">
+    <meta name="author" content="NWFET Simulation Lab">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="NWFET Energy Band Diagram Program">
+    <meta property="og:description" content="Interactive band structure analysis for nanowire FETs">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div>
+                <div class="title">
+                    <i class="fas fa-atom"></i> NWFET Energy Band Diagram Program
+                </div>
+                <div class="subtitle">Interactive Band Structure Analysis for Pi-Gate and Omega-Gate Nanowire FETs</div>
+            </div>
+            <div class="version-info">
+                <i class="fas fa-code-branch"></i> Version 2.0
+                <span style="margin-left: 10px;">
+                    <i class="fas fa-clock"></i> 
+                    <span id="current-time"></span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Control Panel -->
+        <aside class="control-panel">
+            <div class="control-section">
+                <div class="section-title">
+                    <i class="fas fa-microchip section-icon"></i>
+                    Gate Architecture
+                </div>
+                <div class="gate-selector">
+                    <div class="gate-option selected" data-gate="pi">
+                        <i class="fas fa-circle-notch"></i>
+                        <strong>Pi-Gate</strong>
+                        <div style="font-size: 11px; margin-top: 3px;">Partial wrap</div>
+                    </div>
+                    <div class="gate-option" data-gate="omega">
+                        <i class="fas fa-ring"></i>
+                        <strong>Omega-Gate</strong>
+                        <div style="font-size: 11px; margin-top: 3px;">Full wrap</div>
+                    </div>
+                </div>
+                <div id="gate-info" style="margin-top: 15px; padding: 10px; background: #f8f9ff; border-radius: 6px; font-size: 12px;">
+                    <!-- Gate info will be populated here -->
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-title">
+                    <i class="fas fa-flask section-icon"></i>
+                    Material Properties
+                </div>
+                <div class="form-group">
+                    <label for="material">
+                        <i class="fas fa-cube"></i> Gate Material
+                    </label>
+                    <select id="material">
+                        <option value="Si">Silicon (Si)</option>
+                        <option value="Ge">Germanium (Ge)</option>
+                        <option value="GaAs">GaAs</option>
+                        <option value="InAs">InAs</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dielectric">
+                        <i class="fas fa-layer-group"></i> Dielectric Material
+                    </label>
+                    <select id="dielectric">
+                        <option value="SiO2">SiO₂ (k=3.9)</option>
+                        <option value="Al2O3">Al₂O₃ (k=9.0)</option>
+                        <option value="HfO2" selected>HfO₂ (k=25.0)</option>
+                        <option value="ZrO2">ZrO₂ (k=25.0)</option>
+                        <option value="La2O3">La₂O₃ (k=30.0)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="oxide-thickness">
+                        <i class="fas fa-ruler-horizontal"></i> Oxide Thickness
+                    </label>
+                    <div class="range-input">
+                        <input type="range" id="oxide-thickness" min="0.5" max="10" value="2" step="0.1">
+                        <div class="range-value">2.0 nm</div>
+                    </div>
+                </div>
+                <div id="material-info" style="margin-top: 15px; padding: 10px; background: #f8f9ff; border-radius: 6px; font-size: 12px;">
+                    <!-- Material info will be populated here -->
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-title">
+                    <i class="fas fa-ruler-combined section-icon"></i>
+                    Device Dimensions
+                </div>
+                <div class="form-group">
+                    <label for="nanowire-diameter">
+                        <i class="fas fa-circle"></i> Nanowire Diameter
+                    </label>
+                    <div class="range-input">
+                        <input type="range" id="nanowire-diameter" min="3" max="20" value="10" step="0.5">
+                        <div class="range-value">10.0 nm</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="channel-length">
+                        <i class="fas fa-arrows-alt-h"></i> Channel Length
+                    </label>
+                    <input type="number" id="channel-length" value="20" min="10" max="100" step="5">
+                    <small style="color: #666;">nm</small>
+                </div>
+                <div class="form-group">
+                    <label for="doping-concentration">
+                        <i class="fas fa-atom"></i> Doping Concentration
+                    </label>
+                    <input type="number" id="doping-concentration" value="1e18" min="1e16" max="1e20" step="1e16">
+                    <small style="color: #666;">cm⁻³</small>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-title">
+                    <i class="fas fa-bolt section-icon"></i>
+                    Bias Conditions
+                </div>
+                <div class="form-group">
+                    <label for="gate-voltage">
+                        <i class="fas fa-plug"></i> Gate Voltage
+                    </label>
+                    <div class="range-input">
+                        <input type="range" id="gate-voltage" min="-2" max="2" value="0" step="0.1">
+                        <div class="range-value">0.0 V</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="drain-voltage">
+                        <i class="fas fa-battery-half"></i> Drain Voltage
+                    </label>
+                    <input type="number" id="drain-voltage" value="0.1" min="0" max="1" step="0.01">
+                    <small style="color: #666;">V</small>
+                </div>
+                <div class="form-group">
+                    <label for="temperature">
+                        <i class="fas fa-thermometer-half"></i> Temperature
+                    </label>
+                    <input type="number" id="temperature" value="300" min="77" max="500" step="1">
+                    <small style="color: #666;">K</small>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-title">
+                    <i class="fas fa-eye section-icon"></i>
+                    Display Options
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" value="show-bands" checked>
+                        <i class="fas fa-chart-line"></i> Show Energy Bands
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" value="show-wavefunctions" checked>
+                        <i class="fas fa-wave-square"></i> Show Wave Functions
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" value="show-field" checked>
+                        <i class="fas fa-broadcast-tower"></i> Show Electric Field
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" value="show-quantum">
+                        <i class="fas fa-quantum"></i> Show Quantum States
+                    </label>
+                </div>
+            </div>
+
+            <button class="calculate-btn" onclick="calculateBandDiagram()">
+                <i class="fas fa-calculator"></i> 🧮 Calculate Band Diagram
+            </button>
+            
+            <div style="margin-top: 15px; text-align: center;">
+                <small style="color: #666;">
+                    <i class="fas fa-keyboard"></i> Press Ctrl+Enter to calculate
+                </small>
+            </div>
+        </aside>
+
+        <!-- Results Panel -->
+        <main class="results-panel">
+            <div class="results-header">
+                <div class="results-title">
+                    <i class="fas fa-chart-area"></i> Energy Band Diagram Results
+                </div>
+                <div class="status ready" id="status">
+                    <div class="status-dot"></div> Ready
+                </div>
+            </div>
+
+            <div id="welcome-content" class="welcome-message">
+                <h3>
+                    <i class="fas fa-microscope"></i> Welcome to NWFET Energy Band Diagram Program
+                </h3>
+                <p>
+                    This advanced program calculates and visualizes the energy band structure of Pi-Gate and Omega-Gate Nanowire FETs using quantum mechanical principles. 
+                    Configure your device parameters and click "Calculate Band Diagram" to generate detailed band diagrams, 
+                    wave functions, electric field distributions, and quantum energy levels.
+                </p>
+                <div style="margin-top: 20px;">
+                    <h4 style="color: #2c3e50; margin-bottom: 10px;">
+                        <i class="fas fa-rocket"></i> Key Features:
+                    </h4>
+                    <ul style="text-align: left; max-width: 600px; margin: 0 auto;">
+                        <li><i class="fas fa-check-circle" style="color: #27ae60;"></i> Quantum mechanical band structure calculations</li>
+                        <li><i class="fas fa-check-circle" style="color: #27ae60;"></i> Real-time wave function visualization</li>
+                        <li><i class="fas fa-check-circle" style="color: #27ae60;"></i> Electric field distribution analysis</li>
+                        <li><i class="fas fa-check-circle" style="color: #27ae60;"></i> Multiple material and dielectric options</li>
+                        <li><i class="fas fa-check-circle" style="color: #27ae60;"></i> Pi-Gate vs Omega-Gate comparison</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="results-content" style="display: none;">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('band')">
+                        <i class="fas fa-chart-line"></i> Band Diagram
+                    </button>
+                    <button class="tab" onclick="switchTab('wavefunction')">
+                        <i class="fas fa-wave-square"></i> Wave Functions
+                    </button>
+                    <button class="tab" onclick="switchTab('electric-field')">
+                        <i class="fas fa-broadcast-tower"></i> Electric Field
+                    </button>
+                    <button class="tab" onclick="switchTab('quantum')">
+                        <i class="fas fa-quantum"></i> Quantum States
+                    </button>
+                    <button class="tab" onclick="switchTab('parameters')">
+                        <i class="fas fa-cogs"></i> Parameters
+                    </button>
+                </div>
+
+                <div id="band-tab" class="tab-content active">
+                    <div class="diagram-container">
+                        <div class="diagram-title">
+                            <i class="fas fa-chart-line"></i> Energy Band Diagram
+                        </div>
+                        <div class="band-diagram" id="band-diagram">
+                            <div class="loading-overlay" id="band-loading" style="display: none;">
+                                <div class="loading-spinner"></div>
+                                <div style="margin-top: 10px; font-size: 14px; color: #666;">Calculating band structure...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="wavefunction-tab" class="tab-content">
+                    <div class="diagram-container">
+                        <div class="diagram-title">
+                            <i class="fas fa-wave-square"></i> Wave Function Probability Density
+                        </div>
+                        <div class="band-diagram" id="wavefunction-diagram"></div>
+                    </div>
+                </div>
+
+                <div id="electric-field-tab" class="tab-content">
+                    <div class="diagram-container">
+                        <div class="diagram-title">
+                            <i class="fas fa-broadcast-tower"></i> Electric Field Distribution
+                        </div>
+                        <div class="band-diagram" id="electric-field-diagram"></div>
+                    </div>
+                </div>
+
+                <div id="quantum-tab" class="tab-content">
+                    <div class="diagram-container">
+                        <div class="diagram-title">
+                            <i class="fas fa-quantum"></i> Quantum Energy Levels
+                        </div>
+                        <div class="band-diagram" id="quantum-diagram"></div>
+                    </div>
+                </div>
+
+                <div id="parameters-tab" class="tab-content">
+                    <div class="parameters-display">
+                        <div class="parameters-title">
+                            <i class="fas fa-info-circle"></i> Calculated Parameters
+                        </div>
+                        <div class="parameter-grid" id="parameter-grid">
+                            <!-- Parameters will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-buttons">
+                    <button class="export-btn" onclick="exportDiagram('png')">
+                        <i class="fas fa-image"></i> 📷 Export PNG
+                    </button>
+                    <button class="export-btn" onclick="exportDiagram('svg')">
+                        <i class="fas fa-vector-square"></i> 🎨 Export SVG
+                    </button>
+                    <button class="export-btn" onclick="exportData('csv')">
+                        <i class="fas fa-file-csv"></i> 📊 Export CSV
+                    </button>
+                    <button class="export-btn" onclick="exportData('json')">
+                        <i class="fas fa-file-code"></i> 📄 Export JSON
+                    </button>
+                    <button class="export-btn" onclick="shareResults()">
+                        <i class="fas fa-share-alt"></i> 🔗 Share Results
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer style="background: #2c3e50; color: white; text-align: center; padding: 20px; margin-top: 40px;">
+        <p>&copy; 2024 NWFET Simulation Lab. All rights reserved.</p>
+        <p style="font-size: 12px; margin-top: 5px;">
+            <i class="fas fa-flask"></i> Powered by Advanced Quantum Mechanical Calculations
+        </p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/main.js"></script>
+    
+    <!-- Time Display Script -->
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('current-time').textContent = timeString;
+        }
+        
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>

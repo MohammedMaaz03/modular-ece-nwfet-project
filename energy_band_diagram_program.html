@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NWFET Energy Band Diagram Program</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f0f4f8;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .control-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .control-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .range-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .range-input input[type="range"] {
+            flex: 1;
+        }
+
+        .range-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .gate-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .gate-option {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .gate-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .gate-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .calculate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .results-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status.ready {
+            background: #e8f5e8;
+            color: #27ae60;
+        }
+
+        .status.calculating {
+            background: #fff3cd;
+            color: #f39c12;
+        }
+
+        .status.complete {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .diagram-container {
+            margin-bottom: 30px;
+        }
+
+        .diagram-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .band-diagram {
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fafafa;
+            position: relative;
+        }
+
+        .parameters-display {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .parameters-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .parameter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .parameter-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .parameter-name {
+            font-size: 13px;
+            color: #555;
+        }
+
+        .parameter-value {
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .export-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .welcome-message h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .welcome-message p {
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div>
+                <div class="title">NWFET Energy Band Diagram Program</div>
+                <div class="subtitle">Interactive Band Structure Analysis for Pi-Gate and Omega-Gate Nanowire FETs</div>
+            </div>
+            <div>
+                <div style="font-size: 12px; opacity: 0.8;">Version 1.0</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="control-panel">
+            <div class="control-section">
+                <div class="section-title">
+                    ⚛️ Gate Architecture
+                </div>
+                <div class="gate-selector">
+                    <div class="gate-option selected" data-gate="pi">
+                        <strong>Pi-Gate</strong>
+                        <div style="font-size: 11px; margin-top: 3px;">Partial wrap</div>
+                    </div>
+                    <div class="gate-option" data-gate="omega">
+                        <strong>Omega-Gate</strong>
+                        <div style="font-size: 11px; margin-top: 3px;">Full wrap</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-title">
+                    🧪 Material Properties
+                </div>
+                <div class="form-group">
+                    <label for="material">Gate Material</label>
+                    <select id="material">
+                        <option value="Si">Silicon (Si)</option>
+                        <option value="Ge">Germanium (Ge)</option>
+                        <option value="GaAs">GaAs</option>
+                        <option value="InAs">InAs</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dielectric">Dielectric Material</label>
+                    <select id="dielectric">
+                        <option value="SiO2">SiO₂ (k=3.9)</option>
+                        <option value="Al2O3">Al₂O₃ (k=9.0)</option>
+                        <option value="HfO2" selected>HfO₂ (k=25.0)</option>
+                        <option value="ZrO2">ZrO₂ (k=25.0)</option>
+                        <option value="La2O3">La₂O₃ (k=30.0)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="oxide-thickness">Oxide Thickness</label>
+                    <div class="range-input">
+                        <input type="range" id="oxide-thickness" min="0.5" max="10" value="2" step="0.1">
+                        <div class="range-value">2.0 nm</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-title">
+                    📏 Device Dimensions
+                </div>
+                <div class="form-group">
+                    <label for="nanowire-diameter">Nanowire Diameter</label>
+                    <div class="range-input">
+                        <input type="range" id="nanowire-diameter" min="3" max="20" value="10" step="0.5">
+                        <div class="range-value">10.0 nm</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="channel-length">Channel Length</label>
+                    <input type="number" id="channel-length" value="20" min="10" max="100" step="5">
+                    <small style="color: #666;">nm</small>
+                </div>
+                <div class="form-group">
+                    <label for="doping-concentration">Doping Concentration</label>
+                    <input type="number" id="doping-concentration" value="1e18" min="1e16" max="1e20" step="1e16">
+                    <small style="color: #666;">cm⁻³</small>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-title">
+                    ⚡ Bias Conditions
+                </div>
+                <div class="form-group">
+                    <label for="gate-voltage">Gate Voltage</label>
+                    <div class="range-input">
+                        <input type="range" id="gate-voltage" min="-2" max="2" value="0" step="0.1">
+                        <div class="range-value">0.0 V</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="drain-voltage">Drain Voltage</label>
+                    <input type="number" id="drain-voltage" value="0.1" min="0" max="1" step="0.01">
+                    <small style="color: #666;">V</small>
+                </div>
+                <div class="form-group">
+                    <label for="temperature">Temperature</label>
+                    <input type="number" id="temperature" value="300" min="77" max="500" step="1">
+                    <small style="color: #666;">K</small>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="section-title">
+                    🎨 Display Options
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" checked> Show Energy Bands
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" checked> Show Wave Functions
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" checked> Show Electric Field
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox"> Show Quantum States
+                    </label>
+                </div>
+            </div>
+
+            <button class="calculate-btn" onclick="calculateBandDiagram()">
+                🧮 Calculate Band Diagram
+            </button>
+        </aside>
+
+        <main class="results-panel">
+            <div class="results-header">
+                <div class="results-title">Energy Band Diagram Results</div>
+                <div class="status ready" id="status">Ready</div>
+            </div>
+
+            <div id="welcome-content" class="welcome-message">
+                <h3>Welcome to NWFET Energy Band Diagram Program</h3>
+                <p>
+                    This program calculates and visualizes the energy band structure of Pi-Gate and Omega-Gate Nanowire FETs. 
+                    Configure your device parameters and click "Calculate Band Diagram" to generate detailed band diagrams, 
+                    wave functions, and quantum mechanical analysis.
+                </p>
+            </div>
+
+            <div id="results-content" style="display: none;">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('band')">Band Diagram</button>
+                    <button class="tab" onclick="switchTab('wavefunction')">Wave Functions</button>
+                    <button class="tab" onclick="switchTab('electric-field')">Electric Field</button>
+                    <button class="tab" onclick="switchTab('quantum')">Quantum States</button>
+                    <button class="tab" onclick="switchTab('parameters')">Parameters</button>
+                </div>
+
+                <div id="band-tab" class="tab-content active">
+                    <div class="diagram-container">
+                        <div class="diagram-title">Energy Band Diagram</div>
+                        <div class="band-diagram" id="band-diagram">
+                            <div class="loading-overlay" id="band-loading" style="display: none;">
+                                <div class="loading-spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="wavefunction-tab" class="tab-content">
+                    <div class="diagram-container">
+                        <div class="diagram-title">Wave Function Distribution</div>
+                        <div class="band-diagram" id="wavefunction-diagram"></div>
+                    </div>
+                </div>
+
+                <div id="electric-field-tab" class="tab-content">
+                    <div class="diagram-container">
+                        <div class="diagram-title">Electric Field Distribution</div>
+                        <div class="band-diagram" id="electric-field-diagram"></div>
+                    </div>
+                </div>
+
+                <div id="quantum-tab" class="tab-content">
+                    <div class="diagram-container">
+                        <div class="diagram-title">Quantum Energy Levels</div>
+                        <div class="band-diagram" id="quantum-diagram"></div>
+                    </div>
+                </div>
+
+                <div id="parameters-tab" class="tab-content">
+                    <div class="parameters-display">
+                        <div class="parameters-title">Calculated Parameters</div>
+                        <div class="parameter-grid" id="parameter-grid">
+                            <!-- Parameters will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-buttons">
+                    <button class="export-btn" onclick="exportDiagram('png')">📷 Export PNG</button>
+                    <button class="export-btn" onclick="exportDiagram('svg')">🎨 Export SVG</button>
+                    <button class="export-btn" onclick="exportData('csv')">📊 Export Data</button>
+                    <button class="export-btn" onclick="exportData('json')">📄 Export JSON</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Material properties database
+        const materialProperties = {
+            'Si': {
+                electronAffinity: 4.05,
+                bandGap: 1.12,
+                effectiveMass: 0.26,
+                dielectricConstant: 11.7
+            },
+            'Ge': {
+                electronAffinity: 4.0,
+                bandGap: 0.66,
+                effectiveMass: 0.12,
+                dielectricConstant: 16.0
+            },
+            'GaAs': {
+                electronAffinity: 4.07,
+                bandGap: 1.42,
+                effectiveMass: 0.067,
+                dielectricConstant: 12.9
+            },
+            'InAs': {
+                electronAffinity: 4.9,
+                bandGap: 0.36,
+                effectiveMass: 0.023,
+                dielectricConstant: 15.15
+            }
+        };
+
+        const dielectricProperties = {
+            'SiO2': { k: 3.9, barrierHeight: 3.2 },
+            'Al2O3': { k: 9.0, barrierHeight: 2.8 },
+            'HfO2': { k: 25.0, barrierHeight: 1.5 },
+            'ZrO2': { k: 25.0, barrierHeight: 1.4 },
+            'La2O3': { k: 30.0, barrierHeight: 2.1 }
+        };
+
+        let currentResults = {};
+
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+        });
+
+        function initializeEventListeners() {
+            // Gate selection
+            document.querySelectorAll('.gate-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.gate-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+
+            // Range inputs
+            document.getElementById('oxide-thickness').addEventListener('input', function() {
+                this.nextElementSibling.textContent = this.value + ' nm';
+            });
+
+            document.getElementById('nanowire-diameter').addEventListener('input', function() {
+                this.nextElementSibling.textContent = this.value + ' nm';
+            });
+
+            document.getElementById('gate-voltage').addEventListener('input', function() {
+                this.nextElementSibling.textContent = this.value + ' V';
+            });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        async function calculateBandDiagram() {
+            const button = document.querySelector('.calculate-btn');
+            const status = document.getElementById('status');
+            const welcomeContent = document.getElementById('welcome-content');
+            const resultsContent = document.getElementById('results-content');
+            
+            // Update UI
+            button.disabled = true;
+            button.textContent = '🔄 Calculating...';
+            status.className = 'status calculating';
+            status.textContent = 'Calculating';
+            
+            // Show loading
+            document.getElementById('band-loading').style.display = 'flex';
+            
+            // Hide welcome, show results
+            welcomeContent.style.display = 'none';
+            resultsContent.style.display = 'block';
+            
+            // Get parameters
+            const params = getParameters();
+            
+            // Simulate calculation
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Calculate band structure
+            currentResults = calculateBandStructure(params);
+            
+            // Update UI
+            button.disabled = false;
+            button.textContent = '🧮 Calculate Band Diagram';
+            status.className = 'status complete';
+            status.textContent = 'Complete';
+            
+            // Hide loading
+            document.getElementById('band-loading').style.display = 'none';
+            
+            // Update all diagrams
+            updateBandDiagram(currentResults);
+            updateWaveFunctionDiagram(currentResults);
+            updateElectricFieldDiagram(currentResults);
+            updateQuantumDiagram(currentResults);
+            updateParameters(currentResults);
+        }
+
+        function getParameters() {
+            return {
+                gateType: document.querySelector('.gate-option.selected').dataset.gate,
+                material: document.getElementById('material').value,
+                dielectric: document.getElementById('dielectric').value,
+                oxideThickness: parseFloat(document.getElementById('oxide-thickness').value),
+                nanowireDiameter: parseFloat(document.getElementById('nanowire-diameter').value),
+                channelLength: parseFloat(document.getElementById('channel-length').value),
+                dopingConcentration: parseFloat(document.getElementById('doping-concentration').value),
+                gateVoltage: parseFloat(document.getElementById('gate-voltage').value),
+                drainVoltage: parseFloat(document.getElementById('drain-voltage').value),
+                temperature: parseFloat(document.getElementById('temperature').value)
+            };
+        }
+
+        function calculateBandStructure(params) {
+            const material = materialProperties[params.material];
+            const dielectric = dielectricProperties[params.dielectric];
+            
+            // Calculate positions
+            const positions = [];
+            for (let x = -params.nanowireDiameter/2; x <= params.nanowireDiameter/2; x += 0.1) {
+                positions.push(x);
+            }
+            
+            // Calculate conduction band
+            const conductionBand = positions.map(x => {
+                const bandBending = calculateBandBending(x, params);
+                const quantumConfinement = calculateQuantumConfinement(x, params);
+                return material.electronAffinity + bandBending + quantumConfinement;
+            });
+            
+            // Calculate valence band
+            const valenceBand = conductionBand.map(cb => cb - material.bandGap);
+            
+            // Calculate Fermi level
+            const fermiLevel = calculateFermiLevel(params);
+            
+            // Calculate wave functions
+            const waveFunctions = calculateWaveFunctions(positions, params);
+            
+            // Calculate electric field
+            const electricField = calculateElectricField(positions, params);
+            
+            // Calculate quantum states
+            const quantumStates = calculateQuantumStates(params);
+            
+            return {
+                positions,
+                conductionBand,
+                valenceBand,
+                fermiLevel,
+                waveFunctions,
+                electricField,
+                quantumStates,
+                parameters: params,
+                material,
+                dielectric
+            };
+        }
+
+        function calculateBandBending(x, params) {
+            const { gateType, gateVoltage, oxideThickness, nanowireDiameter } = params;
+            
+            // Surface potential calculation
+            const surfacePotential = gateVoltage * (gateType === 'omega' ? 0.8 : 0.6);
+            
+            // Parabolic potential profile
+            const maxBending = surfacePotential * (oxideThickness / 2);
+            const normalizedX = x / (nanowireDiameter / 2);
+            
+            return maxBending * (1 - normalizedX * normalizedX);
+        }
+
+        function calculateQuantumConfinement(x, params) {
+            const { nanowireDiameter, material } = params;
+            const matProps = materialProperties[material];
+            
+            // Quantum confinement energy
+            const confinementEnergy = (matProps.effectiveMass * 1.055e-34 * 1.055e-34) / 
+                                    (2 * 1.602e-19 * matProps.effectiveMass * Math.pow(nanowireDiameter * 1e-9, 2));
+            
+            return confinementEnergy * (1 + 0.5 * Math.cos(2 * Math.PI * x / nanowireDiameter));
+        }
+
+        function calculateFermiLevel(params) {
+            const { dopingConcentration, temperature, material } = params;
+            const matProps = materialProperties[material];
+            
+            // Simplified Fermi level calculation
+            const kT = 8.617e-5 * temperature; // eV
+            const Ef = matProps.bandGap / 2 + kT * Math.log(dopingConcentration / 1e16);
+            
+            return Ef;
+        }
+
+        function calculateWaveFunctions(positions, params) {
+            const { nanowireDiameter } = params;
+            
+            // Calculate first few eigenfunctions
+            const waveFunctions = [];
+            
+            for (let n = 1; n <= 3; n++) {
+                const psi = positions.map(x => {
+                    const normalizedX = x / (nanowireDiameter / 2);
+                    if (Math.abs(normalizedX) <= 1) {
+                        return Math.sqrt(2 / nanowireDiameter) * Math.sin(n * Math.PI * (normalizedX + 1) / 2);
+                    }
+                    return 0;
+                });
+                
+                waveFunctions.push({
+                    n: n,
+                    psi: psi,
+                    energy: n * n * 0.1 // Simplified energy levels
+                });
+            }
+            
+            return waveFunctions;
+        }
+
+        function calculateElectricField(positions, params) {
+            const { gateType, gateVoltage, oxideThickness, nanowireDiameter } = params;
+            
+            // Electric field distribution
+            const maxField = gateVoltage / oxideThickness * (gateType === 'omega' ? 1.2 : 1.0);
+            
+            return positions.map(x => {
+                const normalizedX = x / (nanowireDiameter / 2);
+                return maxField * normalizedX * Math.exp(-Math.abs(normalizedX));
+            });
+        }
+
+        function calculateQuantumStates(params) {
+            const { nanowireDiameter, material } = params;
+            const matProps = materialProperties[material];
+            
+            // Calculate quantum energy levels
+            const states = [];
+            const numStates = 5;
+            
+            for (let n = 1; n <= numStates; n++) {
+                const energy = (n * n * Math.PI * Math.PI * 1.055e-34 * 1.055e-34) / 
+                              (2 * matProps.effectiveMass * 1.602e-19 * Math.pow(nanowireDiameter * 1e-9, 2));
+                
+                states.push({
+                    n: n,
+                    energy: energy,
+                    occupancy: 1 / (1 + Math.exp(energy / (8.617e-5 * params.temperature)))
+                });
+            }
+            
+            return states;
+        }
+
+        function updateBandDiagram(results) {
+            const container = document.getElementById('band-diagram');
+            
+            const trace1 = {
+                x: results.positions,
+                y: results.conductionBand,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Conduction Band',
+                line: { color: 'blue', width: 3 }
+            };
+            
+            const trace2 = {
+                x: results.positions,
+                y: results.valenceBand,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Valence Band',
+                line: { color: 'red', width: 3 }
+            };
+            
+            const trace3 = {
+                x: [results.positions[0], results.positions[results.positions.length - 1]],
+                y: [results.fermiLevel, results.fermiLevel],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Fermi Level',
+                line: { color: 'green', width: 2, dash: 'dash' }
+            };
+            
+            const layout = {
+                title: {
+                    text: `Energy Band Diagram - ${results.parameters.gateType.toUpperCase()}-Gate`,
+                    font: { size: 16 }
+                },
+                xaxis: {
+                    title: 'Position (nm)',
+                    grid: { color: '#e0e0e0' }
+                },
+                yaxis: {
+                    title: 'Energy (eV)',
+                    grid: { color: '#e0e0e0' }
+                },
+                margin: { t: 50, r: 50, b: 50, l: 50 },
+                plot_bgcolor: '#fafafa'
+            };
+            
+            Plotly.newPlot(container, [trace1, trace2, trace3], layout);
+        }
+
+        function updateWaveFunctionDiagram(results) {
+            const container = document.getElementById('wavefunction-diagram');
+            
+            const traces = results.waveFunctions.map((wf, index) => ({
+                x: results.positions,
+                y: wf.psi.map(psi => psi * psi), // Probability density
+                type: 'scatter',
+                mode: 'lines',
+                name: `n=${wf.n}`,
+                line: { width: 2 }
+            }));
+            
+            const layout = {
+                title: {
+                    text: 'Wave Function Probability Density',
+                    font: { size: 16 }
+                },
+                xaxis: {
+                    title: 'Position (nm)',
+                    grid: { color: '#e0e0e0' }
+                },
+                yaxis: {
+                    title: '|ψ|²',
+                    grid: { color: '#e0e0e0' }
+                },
+                margin: { t: 50, r: 50, b: 50, l: 50 },
+                plot_bgcolor: '#fafafa'
+            };
+            
+            Plotly.newPlot(container, traces, layout);
+        }
+
+        function updateElectricFieldDiagram(results) {
+            const container = document.getElementById('electric-field-diagram');
+            
+            const trace = {
+                x: results.positions,
+                y: results.electricField,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Electric Field',
+                line: { color: 'purple', width: 3 }
+            };
+            
+            const layout = {
+                title: {
+                    text: 'Electric Field Distribution',
+                    font: { size: 16 }
+                },
+                xaxis: {
+                    title: 'Position (nm)',
+                    grid: { color: '#e0e0e0' }
+                },
+                yaxis: {
+                    title: 'Electric Field (V/nm)',
+                    grid: { color: '#e0e0e0' }
+                },
+                margin: { t: 50, r: 50, b: 50, l: 50 },
+                plot_bgcolor: '#fafafa'
+            };
+            
+            Plotly.newPlot(container, [trace], layout);
+        }
+
+        function updateQuantumDiagram(results) {
+            const container = document.getElementById('quantum-diagram');
+            
+            const trace = {
+                x: results.quantumStates.map(state => state.n),
+                y: results.quantumStates.map(state => state.energy),
+                type: 'bar',
+                name: 'Energy Levels',
+                marker: { color: 'orange' }
+            };
+            
+            const layout = {
+                title: {
+                    text: 'Quantum Energy Levels',
+                    font: { size: 16 }
+                },
+                xaxis: {
+                    title: 'Quantum Number (n)',
+                    grid: { color: '#e0e0e0' }
+                },
+                yaxis: {
+                    title: 'Energy (eV)',
+                    grid: { color: '#e0e0e0' }
+                },
+                margin: { t: 50, r: 50, b: 50, l: 50 },
+                plot_bgcolor: '#fafafa'
+            };
+            
+            Plotly.newPlot(container, [trace], layout);
+        }
+
+        function updateParameters(results) {
+            const container = document.getElementById('parameter-grid');
+            
+            const parameters = [
+                { name: 'Gate Type', value: results.parameters.gateType.toUpperCase() + '-Gate' },
+                { name: 'Material', value: results.parameters.material },
+                { name: 'Dielectric', value: results.parameters.dielectric },
+                { name: 'Band Gap', value: results.material.bandGap.toFixed(3) + ' eV' },
+                { name: 'Electron Affinity', value: results.material.electronAffinity.toFixed(3) + ' eV' },
+                { name: 'Effective Mass', value: results.material.effectiveMass.toFixed(3) + ' m₀' },
+                { name: 'Fermi Level', value: results.fermiLevel.toFixed(3) + ' eV' },
+                { name: 'Barrier Height', value: results.dielectric.barrierHeight.toFixed(2) + ' eV' },
+                { name: 'Quantum Confinement', value: 'Active' },
+                { name: 'Subband Spacing', value: '0.1 eV' }
+            ];
+            
+            container.innerHTML = parameters.map(param => `
+                <div class="parameter-item">
+                    <span class="parameter-name">${param.name}</span>
+                    <span class="parameter-value">${param.value}</span>
+                </div>
+            `).join('');
+        }
+
+        function exportDiagram(format) {
+            if (format === 'png') {
+                Plotly.downloadImage('band-diagram', {
+                    format: 'png',
+                    width: 800,
+                    height: 600,
+                    filename: 'band_diagram'
+                });
+            } else if (format === 'svg') {
+                Plotly.downloadImage('band-diagram', {
+                    format: 'svg',
+                    width: 800,
+                    height: 600,
+                    filename: 'band_diagram'
+                });
+            }
+        }
+
+        function exportData(format) {
+            if (format === 'csv') {
+                const csv = 'Position,Conduction Band,Valence Band,Fermi Level\n' +
+                    currentResults.positions.map((pos, i) => 
+                        `${pos},${currentResults.conductionBand[i]},${currentResults.valenceBand[i]},${currentResults.fermiLevel}`
+                    ).join('\n');
+                
+                downloadFile(csv, 'band_diagram_data.csv', 'text/csv');
+            } else if (format === 'json') {
+                const json = JSON.stringify(currentResults, null, 2);
+                downloadFile(json, 'band_diagram_data.json', 'application/json');
+            }
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
