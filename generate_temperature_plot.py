@@ -4,15 +4,15 @@ import matplotlib.pyplot as plt
 # Temperature range
 temperatures = [77, 200, 300, 400, 500, 600]
 gates = ['Pi-Gate', 'Omega-Gate']
-materials = ['Si', 'Ge', 'GaAs', 'InAs', 'GaN']
+materials = ['SiO2', 'Al2O3', 'HfO2', 'ZrO2', 'La2O3']
 
 # Enhanced material parameters for temperature-dependent behavior
 material_params = {
-    'Si': {'base_mu': 100, 'temp_coeff': -0.8, 'vt_offset': 0.0},
-    'Ge': {'base_mu': 150, 'temp_coeff': -1.2, 'vt_offset': -0.05},
-    'GaAs': {'base_mu': 200, 'temp_coeff': -1.5, 'vt_offset': -0.1},
-    'InAs': {'base_mu': 300, 'temp_coeff': -1.8, 'vt_offset': -0.15},
-    'GaN': {'base_mu': 180, 'temp_coeff': -1.0, 'vt_offset': 0.05}
+    'SiO2': {'base_mu': 100, 'temp_coeff': -0.8, 'vt_offset': 0.0},
+    'Al2O3': {'base_mu': 150, 'temp_coeff': -1.2, 'vt_offset': -0.05},
+    'HfO2': {'base_mu': 200, 'temp_coeff': -1.5, 'vt_offset': -0.1},
+    'ZrO2': {'base_mu': 300, 'temp_coeff': -1.8, 'vt_offset': -0.15},
+    'La2O3': {'base_mu': 180, 'temp_coeff': -1.0, 'vt_offset': 0.05}
 }
 
 gate_params = {
@@ -145,7 +145,7 @@ plt.suptitle('Temperature-Dependent Transfer Characteristics: Pi-Gate vs Omega-G
             fontsize=16, fontweight='bold', y=0.98)
 
 # Save the plot
-plt.savefig('docs/temperature_dependent_iv.png', dpi=300, bbox_inches='tight')
+plt.savefig('plots/temperature_dependent_iv.png', dpi=300, bbox_inches='tight')
 plt.close()
 
 print("Temperature-dependent IV plot generated with distinct characteristics for each temperature.")
