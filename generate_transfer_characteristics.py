@@ -5,11 +5,20 @@ import matplotlib.pyplot as plt
 temperatures = np.array([77, 200, 300, 400, 500])  # K
 gate_voltages = np.linspace(-1, 1, 200)  # V
 
-# Materials with distinct properties
-materials = ['Si', 'Ge', 'GaAs', 'InAs', 'GaN']
-band_gaps = [1.12, 0.66, 1.42, 0.36, 3.4]  # eV
-electron_mobility = [1400, 3900, 8500, 20000, 1500]  # cm²/V·s
-dielectric_constant = [11.7, 16.2, 12.9, 15.1, 9.0]
+# Materials with distinct properties (high-k gate dielectrics)
+materials = ['SiO2', 'Al2O3', 'HfO2', 'ZrO2', 'La2O3']
+band_gaps = [9.0, 6.5, 5.8, 5.0, 6.0]  # eV (band gap of oxide)
+electron_mobility = [1400, 3500, 8000, 6500, 10000]  # cm²/V·s (channel mobility with oxide)
+dielectric_constant = [3.9, 9.0, 25.0, 22.0, 27.0]  # k value of oxide
+
+# Display names with subscripts
+display_names = {
+    'SiO2': r'SiO$_2$',
+    'Al2O3': r'Al$_2$O$_3$',
+    'HfO2': r'HfO$_2$',
+    'ZrO2': r'ZrO$_2$',
+    'La2O3': r'La$_2$O$_3$',
+}
 
 # Physics-based drain current calculation
 def calculate_drain_current(Vg, T, material, gate_type):
@@ -45,7 +54,9 @@ def calculate_drain_current(Vg, T, material, gate_type):
     Cox = eps * 8.85e-14 / 2e-9  # Oxide capacitance (assume 2nm oxide)
     W_L = 10  # Width/Length ratio
     Vds = 0.5  # Drain voltage
-    Id_sat = (mu_eff * Cox * W_L / 2) * (Vg - Vt)**2 * (1 + lambda_term(Vg, Vds)) if Vg > Vt else 0
+    Id_sat = np.where(Vg > Vt,
+                      (mu_eff * Cox * W_L / 2) * (Vg - Vt)**2 * (1 + lambda_term(Vg, Vds)),
+                      0.0)
 
     # Transition region
     transition = 1 / (1 + np.exp(-10 * (Vg - Vt)))
@@ -64,7 +75,9 @@ def lambda_term(Vg, Vds):
 
 # Create figure with 5 subplots (one per material)
 fig, axes = plt.subplots(5, 1, figsize=(10, 20))
-fig.suptitle('Temperature-Dependent Transfer Characteristics: Pi-Gate vs Omega-Gate NWFETs', fontsize=16, fontweight='bold')
+fig.suptitle('Temperature-Dependent Transfer Characteristics: Pi-Gate vs Omega-Gate NWFETs\n'
+             r'High-k Dielectrics: SiO$_2$, Al$_2$O$_3$, HfO$_2$, ZrO$_2$, La$_2$O$_3$',
+             fontsize=16, fontweight='bold')
 
 colors_pi = ['blue', 'orange', 'green', 'red', 'purple']
 colors_omega = ['cyan', 'magenta', 'lime', 'pink', 'yellow']
@@ -73,7 +86,8 @@ markers = ['o', 's', '^', 'D', 'v']
 
 for i, material in enumerate(materials):
     ax = axes[i]
-    ax.set_title(f'{material} Nanowire: Pi-Gate vs Omega-Gate', fontsize=14)
+    mat_display = display_names[material]
+    ax.set_title(f'{mat_display} Nanowire: Pi-Gate vs Omega-Gate', fontsize=14)
     ax.set_xlabel('Gate Voltage (V)')
     ax.set_ylabel('Drain Current (A)')
     ax.grid(True, alpha=0.3)
@@ -100,4 +114,5 @@ for i, material in enumerate(materials):
 
 plt.tight_layout()
 plt.savefig('plots/temperature_dependent_iv.png', dpi=300, bbox_inches='tight')
-plt.show()
+plt.close()
+print("Temperature-dependent IV plot saved to plots/temperature_dependent_iv.png")
