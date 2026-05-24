@@ -137,7 +137,7 @@ for i, material in enumerate(materials):
                        linewidth=2,
                        label=f'{T}K')
 
-        ax.set_title(f"{gate} - {material} ($\\kappa$={material_params[material]['kappa']}) (Temperature Sweep)", fontsize=12, pad=10, fontweight='bold')
+        ax.set_title(f"{gate} - {material} (Temperature Sweep)", fontsize=12, pad=10, fontweight='bold')
         ax.set_xlabel("Gate Voltage (V)", fontsize=10)
         ax.set_ylabel("Drain Current (A)", fontsize=10)
         ax.set_xlim(-0.5, 1.2)
@@ -145,13 +145,7 @@ for i, material in enumerate(materials):
         ax.grid(True, which="both", ls="-", alpha=0.3)
         ax.legend(fontsize='small', loc='upper left')
 
-        # Add parameter annotations
-        params = material_params[material]
-        ax.text(0.97, 0.05,
-               f"$\\kappa$ = {params['kappa']:.1f}\n$\\mu_0$ = {params['base_mu']}",
-               transform=ax.transAxes, fontsize=8, verticalalignment='bottom',
-               horizontalalignment='right',
-               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+
 
 # Overall title
 plt.suptitle('Temperature-Dependent Transfer Characteristics: Pi-Gate vs Omega-Gate NWFETs\n' +
