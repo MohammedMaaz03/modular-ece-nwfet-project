@@ -4,15 +4,15 @@ import matplotlib.pyplot as plt
 # Temperature range
 temperatures = [77, 200, 300, 400, 500, 600]
 gates = ['Pi-Gate', 'Omega-Gate']
-materials = ['SiO2', 'Al2O3', 'HfO2', 'ZrO2', 'La2O3']
+materials = ['Si', 'Ge', 'GaAs', 'InAs', 'GaN']
 
 # Enhanced material parameters for temperature-dependent behavior
 material_params = {
-    'SiO2':  {'base_mu': 100, 'temp_coeff': -0.8, 'vt_offset': 0.0},
-    'Al2O3': {'base_mu': 150, 'temp_coeff': -1.2, 'vt_offset': -0.05},
-    'HfO2':  {'base_mu': 200, 'temp_coeff': -1.5, 'vt_offset': -0.1},
-    'ZrO2':  {'base_mu': 300, 'temp_coeff': -1.8, 'vt_offset': -0.15},
-    'La2O3': {'base_mu': 180, 'temp_coeff': -1.0, 'vt_offset': 0.05},
+    'Si': {'base_mu': 100, 'temp_coeff': -0.8, 'vt_offset': 0.0},
+    'Ge': {'base_mu': 150, 'temp_coeff': -1.2, 'vt_offset': -0.05},
+    'GaAs': {'base_mu': 200, 'temp_coeff': -1.5, 'vt_offset': -0.1},
+    'InAs': {'base_mu': 300, 'temp_coeff': -1.8, 'vt_offset': -0.15},
+    'GaN': {'base_mu': 180, 'temp_coeff': -1.0, 'vt_offset': 0.05}
 }
 
 gate_params = {
@@ -23,15 +23,6 @@ gate_params = {
 # Constants
 q = 1.60217662e-19
 k = 1.380649e-23
-
-# Display names with subscripts
-display_names = {
-    'SiO2': r'SiO$_2$',
-    'Al2O3': r'Al$_2$O$_3$',
-    'HfO2': r'HfO$_2$',
-    'ZrO2': r'ZrO$_2$',
-    'La2O3': r'La$_2$O$_3$',
-}
 
 def calculate_temperature_current(T, material, gate):
     """Calculate current with completely different physics for each temperature"""
@@ -106,7 +97,6 @@ def calculate_temperature_current(T, material, gate):
 
     return Vgs, np.maximum(Ids, 1e-25)
 
-
 # Create figure with subplots
 fig, axes = plt.subplots(5, 2, figsize=(16, 24))
 plt.subplots_adjust(hspace=0.4, wspace=0.3, top=0.95, bottom=0.05)
@@ -135,8 +125,7 @@ for i, material in enumerate(materials):
                        linewidth=2,
                        label=f'{T}K')
 
-        mat_display = display_names[material]
-        ax.set_title(f"{gate} - {mat_display} (Temperature Sweep)", fontsize=12, pad=10, fontweight='bold')
+        ax.set_title(f"{gate} - {material} (Temperature Sweep)", fontsize=12, pad=10, fontweight='bold')
         ax.set_xlabel("Gate Voltage (V)", fontsize=10)
         ax.set_ylabel("Drain Current (A)", fontsize=10)
         ax.set_xlim(-0.5, 1.2)
@@ -146,7 +135,7 @@ for i, material in enumerate(materials):
 
         # Add parameter annotations
         params = material_params[material]
-        ax.text(0.02, 0.98, f"$\\mu_0$={params['base_mu']:.0f}",
+        ax.text(0.02, 0.98, '.0f',
                transform=ax.transAxes, fontsize=8, verticalalignment='top',
                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
 
@@ -156,7 +145,7 @@ plt.suptitle('Temperature-Dependent Transfer Characteristics: Pi-Gate vs Omega-G
             fontsize=16, fontweight='bold', y=0.98)
 
 # Save the plot
-plt.savefig('plots/temperature_dependent_iv.png', dpi=300, bbox_inches='tight')
+plt.savefig('docs/temperature_dependent_iv.png', dpi=300, bbox_inches='tight')
 plt.close()
 
 print("Temperature-dependent IV plot generated with distinct characteristics for each temperature.")
